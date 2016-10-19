@@ -1,0 +1,238 @@
+Microsoft (R) Macro Assembler Version 12.00.21005.1	    04/13/16 17:06:43
+	Lab7a.as					     Page 1 - 1
+
+
+				title    Lab7a.asm   ;John Lahut
+
+				.386
+				.model flat, stdcall
+
+
+				;FILL IN CODE for external procedure prototypes
+				ReadInt proto
+				WriteInt proto
+				WriteString proto
+				ExitProcess proto :DWORD
+
+				.stack 100h
+
+ 00000000			.data
+ 00000000 45 6E 74 65 72	        prompt  byte    "Enter a positive number: ", 0
+	   20 61 20 70 6F
+	   73 69 74 69 76
+	   65 20 6E 75 6D
+	   62 65 72 3A 20
+	   00
+ 0000001A 54 68 65 20 73	        msg1    byte    "The sum of the numbers from 1 to ", 0
+	   75 6D 20 6F 66
+	   20 74 68 65 20
+	   6E 75 6D 62 65
+	   72 73 20 66 72
+	   6F 6D 20 31 20
+	   74 6F 20 00
+ 0000003C 20 69 73 20 00	        msg2    byte    " is ", 0
+ 00000041 00000000		        number  dword   ?
+ 00000045 00000000		        result  dword   ?
+
+ 00000000			.code
+
+ 00000000			main proc
+				       ;FILL IN CODE to Print "Enter a positive number: "
+ 00000000  BA 00000000 R		   mov edx, OFFSET prompt
+ 00000005  E8 00000000 E		   call WriteString
+
+
+				       ;FILL IN CODE to Read in a value and store it in number
+ 0000000A  E8 00000000 E		   call ReadInt
+ 0000000F  A3 00000041 R		   mov number, eax			;number = eax
+
+
+				       ;FILL IN CODE to call value returning function SumOf
+				       ; Use the stack to send SumOf number's value
+				       ; Your code should store the sum of 1 + 2 + ... + number
+				       ; in result upon return from function SumOf
+ 00000014  FF 35 00000041 R		   push number				;push the function argument onto the stack
+ 0000001A  E8 00000079			   call sumOf				;SumOf(number)
+
+				       ;FILL IN CODE to Print:
+				       ;   "The sum of the numbers from 1 to " number " is " result
+ 0000001F  BA 0000001A R	       mov edx, offset msg1
+ 00000024  E8 00000000 E		   call WriteString
+
+ 00000029  A1 00000041 R		   mov eax, number
+ 0000002E  E8 00000000 E		   call WriteInt
+
+ 00000033  BA 0000003C R		   mov edx, offset msg2
+ 00000038  E8 00000000 E		   call WriteString
+
+ 0000003D  A1 00000045 R		   mov eax, result
+ 00000042  E8 00000000 E		   call WriteInt
+
+				       ;FILL IN CODE to Print "Enter a positive number: "
+ 00000047  BA 00000000 R		   mov edx, offset prompt
+ 0000004C  E8 00000000 E		   call WriteString
+
+
+				       ;FILL IN CODE to read a value and store it in number
+ 00000051  E8 00000000 E		   call ReadInt
+ 00000056  A3 00000041 R		   mov number, eax			;number = eax
+
+
+				       ;FILL IN CODE to call procedure CalcSum(number, result)
+				       ; where number is sent into a value parameter and result
+				       ; is sent to a reference parameter
+
+ 0000005B  FF 35 00000041 R		   push number						;add number to stack
+ 00000061  68 00000045 R		   push offset result				;add address of result onto stack
+ 00000066  E8 00000045			   call calcSum
+
+
+
+				       ;FILL IN CODE to Print:
+				       ;   "The sum of the numbers from 1 to " number " is " result
+ 0000006B  BA 0000001A R	       mov edx, offset msg1
+ 00000070  E8 00000000 E		   call WriteString
+
+ 00000075  A1 00000041 R		   mov eax, number
+ 0000007A  E8 00000000 E		   call WriteInt
+
+ 0000007F  BA 0000003C R		   mov edx, offset msg2
+ 00000084  E8 00000000 E		   call WriteString
+
+ 00000089  A1 00000045 R		   mov eax, result
+ 0000008E  E8 00000000 E		   call WriteInt
+
+
+
+				       ;FILL IN CODE to terminate the program
+ 00000093  E8 00000000 E		   call ExitProcess
+					
+					   
+					   
+
+
+ 00000098			main endp
+
+
+				;FILL IN CODE for value returning function SumOf.  SumOf should leave 
+				;  its parameter on the stack and use indirection through ebp to access
+				;  it.  Be sure to save all used registers (except eax) and to restore
+				;  them before returning.
+ 00000098			sumOf proc
+
+ 00000098  55			push ebp					;preserve registers
+ 00000099  51			push ecx
+
+ 0000009A  8B EC		mov ebp, esp				;align stack pointers
+ 0000009C  B8 00000000		mov eax, 0					;clear EAX
+
+
+ 000000A1  8B 4D 0C		mov ecx, [ebp+12]			;get function parameter and put it in loop counter reg
+
+ 000000A4			sum:						;eax will contain result 
+ 000000A4  03 C1			add eax, ecx			;loop through until the LCV is zero
+ 000000A6  E2 FC			loop sum
+
+ 000000A8  A3 00000045 R	mov result, eax				;result = eax
+
+
+ 000000AD  59			pop ecx						;restore resisters (in reverse order)
+ 000000AE  5D			pop ebp
+
+ 000000AF  C3			ret
+ 000000B0			sumOf endp
+
+
+				;FILL IN CODE for void function CalcSum(dword numb, dword& res)
+				; Leave the argument values on the stack and use indirection through
+				; ebp to access them.  Be sure to save all used registers and restore
+				; them before returning.
+
+ 000000B0			calcSum proc
+
+				;preserve registers
+
+ 000000B0  55			push ebp					;base stack ptr
+ 000000B1  51			push ecx					;lcv reg
+ 000000B2  53			push ebx					;used for accessing ref param
+
+ 000000B3  8B EC		mov ebp, esp				;align stack pointers
+ 000000B5  B8 00000000		mov eax, 0					;clear eax
+
+
+ 000000BA  8B 4D 14		mov ecx, [ebp+20]			;get function param and put it into loop counter reg
+
+ 000000BD			sum:
+ 000000BD  03 C1			add eax, ecx			;eax will contain result
+ 000000BF  E2 FC			loop sum				;loop through until LCV is zero
+
+
+				;want to store whats in the eax to the ref param result whose memory address is located at [ebp+12]
+
+ 000000C1  8B 5D 10		mov ebx, [ebp+16]			;ebx = &result
+ 000000C4  89 03		mov [ebx], eax				;result = eax
+
+
+
+				;restore regs
+ 000000C6  5B			pop ebx							
+ 000000C7  59			pop ecx						
+ 000000C8  5D			pop ebp
+
+ 000000C9  C3			ret
+ 000000CA			calcSum endp
+
+
+				end main
+Microsoft (R) Macro Assembler Version 12.00.21005.1	    04/13/16 17:06:43
+	Lab7a.as					     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00000100 DWord	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000049 DWord	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000000CA DWord	  Public  'CODE'	
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ReadInt  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteInt . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteString  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+calcSum  . . . . . . . . . . . .	P Near	 000000B0 _TEXT	Length= 0000001A Public STDCALL
+  sum  . . . . . . . . . . . . .	L Near	 000000BD _TEXT	
+main . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000098 Public STDCALL
+sumOf  . . . . . . . . . . . . .	P Near	 00000098 _TEXT	Length= 00000018 Public STDCALL
+  sum  . . . . . . . . . . . . .	L Near	 000000A4 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000003h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+msg1 . . . . . . . . . . . . . .	Byte	 0000001A _DATA	
+msg2 . . . . . . . . . . . . . .	Byte	 0000003C _DATA	
+number . . . . . . . . . . . . .	DWord	 00000041 _DATA	
+prompt . . . . . . . . . . . . .	Byte	 00000000 _DATA	
+result . . . . . . . . . . . . .	DWord	 00000045 _DATA	
+
+	   0 Warnings
+	   0 Errors
